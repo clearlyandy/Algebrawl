@@ -5,13 +5,12 @@ define([
     'underscore',
     'backbone',
     'hbs!tmpl/game',
-    'models/answer',
     'views/answerset',
     'views/roundresults',
     'views/waitingroom',
     'animo',
     'textfill',
-], function($, _, Backbone, GameTemplate, AnswerModel, AnswersetView, RoundResultsView, WaitingRoomView) {
+], function($, _, Backbone, GameTemplate, AnswersetView, RoundResultsView, WaitingRoomView) {
     'use strict';
 
     var GameView = Backbone.View.extend({
@@ -134,11 +133,14 @@ define([
             // Highlight the answer the user clicked
             // and hide all others.
             var self = this;
+            this.undelegateEvents();
             _.each($(".btn-choice"), function(btn) {
+                $(btn).css("cursor", "default")
                 if (self.selectedAnswer.attr("rel") != $(btn).attr("rel")) {
                     $(btn).fadeTo("slow", 0);
                 } else {
-                    $(btn).css("background-color", "red");
+
+                    $(btn).attr("disabled", "disabled");
                 }
             });
         },
