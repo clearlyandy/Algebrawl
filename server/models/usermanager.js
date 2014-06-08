@@ -20,9 +20,17 @@
 
         console.log("User disconnected: " + user);
         removeUserBySocketId(socketId);
-        if (activeUsers.length < 1)
-            isGameInProgress = false;
     };
+
+    exports.getActiveUsers = function() {
+        return activeUsers;
+    }
+
+    exports.getActivePlayers = function() {
+        return activeUsers;
+    }
+
+    exports.findUserBySocketId = findUserBySocketId;
 
     function findUserBySocketId(socketId) {
         var user = null;

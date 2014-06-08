@@ -12,6 +12,8 @@ define([
         el: $("#page"),
         template: WaitingRoomTemplate,
 
+        // Render the view that the user will see
+        // until the game in progress ends.
         render: function() {
             this.$el.html(this.template());
         },

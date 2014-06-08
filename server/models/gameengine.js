@@ -19,6 +19,7 @@
             var answer = {};
             answer.num1 = getRandomInt(1, 10)
             answer.num2 = getRandomInt(1, 10);
+            answer.answerId = idx;
             answer.ans = answer.num1 + answer.num2;
 
             var exists = false;
@@ -42,13 +43,15 @@
     }
 
     exports.getStatus = function() {
+        if (userManager.getActiveUsers().length < 1)
+            isGameInProgress = false;
         return {
             isGameInProgress: isGameInProgress,
-            activeUsers: userManager.activeUsers
+            activeUsers: userManager.getActiveUsers()
         }
     }
 
-    exports.getuserManager = function() {
+    exports.getUserManager = function() {
         return userManager;
     }
 

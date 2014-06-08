@@ -12,13 +12,7 @@ define([
         el: $("#page"),
         template: GameTemplate,
 
-        initialize: function() {
-            Backbone.socket.emit("newgame",
-                function(data) {
-                    console.log(data);
-                });
-        },
-
+        // Renders the welcome page.
         render: function() {
             this.$el.html(this.template);
         },

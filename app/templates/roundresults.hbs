@@ -1,8 +1,18 @@
 <div class="row">
 <div class="col-sm-12">
-	{{#win}}
-	<h4>You got it!</h4>
-	{{/win}}
-	<a id="btn-replay" class="btn btn-warning btn-lg btn-block" href="#game">Play Again</a>
+	<div class="text-center">
+		{{#win}}
+		<h4>You got it!</h4>
+		{{/win}}
+		{{^win}}
+		<h4>You lost!</h4>
+		{{/win}}
+		<h4>{{correctAnswer.num1}} + {{correctAnswer.num2}} = {{correctAnswer.ans}}</h4>
+		<div id="playerdata">
+		{{#playerData}}
+		<p>Name: {{this.name}} // Wins: {{this.wins}} // Losses: {{this.losses}} </p>
+		{{/playerData}}
+		</div>
+	</div>
 </div>
 </div>

@@ -1,7 +1,7 @@
 <div class="row">
 {{#each choices}}
 <div class="col-sm-12">
-	<button id="guess-btn-{{this.answer_id}}" class="btn btn-choice btn-warning btn-lg btn-block">{{this.ans}}</button>
+	<button id="guess-btn-{{this.answerId}}" class="btn btn-choice btn-warning btn-lg btn-block" rel="{{this.answerId}}">{{this.ans}}</button>
 	<br />
 </div>
 {{/each}}

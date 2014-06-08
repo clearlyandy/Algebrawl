@@ -12,14 +12,13 @@ define([
         el: $("#page"),
         template: RoundResultsTemplate,
 
-        initialize: function() {
-            Backbone.history.navigate("results");
-        },
-
+        // Renders the round results view
+        // Displays the answer, the winner, and the scoreboard.
         render: function() {
             var template = this.template({
-                winner: this.options.winner,
-                isCorrect: this.options.isCorrect
+                win: this.options.win,
+                correctAnswer: this.options.correctAnswer,
+                playerData: this.options.playerData
             });
             this.$el.html(template);
         }

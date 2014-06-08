@@ -9,9 +9,7 @@ var express = require('express'),
     server = http.createServer(app),
     io = require('socket.io').listen(server),
     engine = require('./models/gameengine.js'),
-    timer = null,
-    gameTime = null;
-
+    timer = null;
 
 app.configure(function() {
     app.set('port', process.env.PORT || 3000);
@@ -31,37 +29,48 @@ app.get('/', function(req, res) {
     res.sendfile(path.join(__dirname, '../app/index.html'));
 });
 
-// start server
 server.listen(app.get('port'));
 
 io.sockets.on('connection', function(socket) {
+
     engine.getUserManager().addUser(socket.id, "Andy" + socket.id);
+
     socket.on('disconnect', function() {
         engine.getUserManager().removeUser(socket.id);
         if (engine.getStatus().activeUsers.length < 0)
             clearInterval(timer);
     });
 
-    socket.on('guess', function(data, fn) {
-        if (parseInt(data.msg) == parseInt(app.possibleAnswers[0].ans)) {
-            io.sockets.emit('message', {
-                msg: "<span style=\"color:red !important\">CORRECT</span>"
+    socket.on('guess', function(data) {
+        var win;
+        var correctAnswerId = parseInt(app.possibleAnswers[0].answerId);
+        var guessedAnswerId = parseInt(data.guessId)
+        if (guessedAnswerId == correctAnswerId) {
+            clearInterval(timer);
+
+            var winner = engine.getUserManager().findUserBySocketId(socket.id);
+            winner.win();
+            for (var userIdx in engine.getUserManager().getActivePlayers()) {
+                var user = engine.getUserManager().getActivePlayers()[userIdx];
+                if (user.socketId != winner.socketId) {
+                    user.lose();
+                }
+            }
+
+            engine.gameOver();
+
+            io.sockets.emit('gameover', {
+                winner: engine.getUserManager().findUserBySocketId(socket.id),
+                win: true,
+                correctAnswer: app.possibleAnswers[0],
+                playerData: engine.getUserManager().getActivePlayers()
             });
         } else {
-            io.sockets.emit('message', {
-                msg: "<span style=\"color:red !important\">Wrong</span>"
-            });
+            io.sockets.emit('wrong');
         }
-        console.log('SOCKET ID ' + socket.id);
-        io.sockets.emit('message', {
-            msg: data.msg
-        });
-
-        //call the client back to clear out the field
-        fn();
     });
 
-    socket.on('newgame', function(fn) {
+    socket.on('newgame', function() {
         if (engine.getStatus().isGameInProgress) {
             io.sockets.emit('enterwaitingroom');
             return;
@@ -72,17 +81,26 @@ io.sockets.on('connection', function(socket) {
             possibleAnswers: app.possibleAnswers
         });
 
-        gameTime = 15000;
+        var gameTime, roundDuration;
+        gameTime = roundDuration = 15000;
 
         // Send time every second
         timer = setInterval(function() {
             io.sockets.emit('updategametimer', {
-                time: gameTime
+                timeElapsed: gameTime,
+                roundDuration: roundDuration
             });
             if (gameTime == 0) {
                 clearInterval(timer);
+                for (var userIdx in engine.getUserManager().getActivePlayers()) {
+                    var user = engine.getUserManager().getActivePlayers()[userIdx];
+                    user.lose();
+                }
+                engine.gameOver();
                 io.sockets.emit('gameover', {
+                    win: false,
                     correctAnswer: app.possibleAnswers[0],
+                    playerData: engine.getUserManager().getActivePlayers()
                     //winner: engine.getWinnerName(),
                     //standings: engine.getStandings()
                 });

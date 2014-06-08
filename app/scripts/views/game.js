@@ -16,22 +16,14 @@ define([
 
     var GameView = Backbone.View.extend({
         el: $("#page"),
-        timer: null,
-        gameTime: 1500,
-        timeElapsed: null,
         answers: null,
         winningAnswer: null,
         currentItem: null,
-        nextItem: null,
+        selectedAnswer: null,
         template: GameTemplate,
 
         events: {
-            "click .btn-choice": "onGuess"
-        },
-
-        initialize: function() {
-            if (typeof Backbone.score == "undefined")
-                Backbone.score = 0;
+            "click .btn-choice": "guess"
         },
 
         render: function() {
@@ -40,32 +32,38 @@ define([
 
         initializeGame: function() {
             var self = this;
+
+            // Tell the server that a new user has joined
             Backbone.socket.emit("newgame");
+
+            // Listen for game engine events from the server
             Backbone.socket.on("startgame", function(data) {
                 self.answers = data.possibleAnswers;
                 self.startRound();
             });
             Backbone.socket.on("enterwaitingroom", function() {
-                console.log("enterwaitingroom");
                 self.enterWaitingRoom();
             });
             Backbone.socket.on("updategametimer", function(data) {
-                console.log("updatinggametimer");
-                self.onGameTimer(data);
+                self.timerTrigger(data);
+            });
+            Backbone.socket.on("gameover", function(data) {
+                self.gameOver(data);
+            });
+            Backbone.socket.on("wrong", function() {
+                self.wrongGuess();
             });
         },
 
         startRound: function() {
-            $(".btn-play").hide();
-            $(".stats").show();
+            // Animate in the timer display
+            $(".stats").show().animo({
+                animation: 'bounceIn'
+            });
             $("#timer").css("color", "#000");
 
             // Set the winner
-            var winnerIdx = this.getRandomInt(0, 3);
             this.winningAnswer = this.answers[0];
-            //this.gameTime = this.timeElapsed = 1500;
-
-            //this.timer = window.setInterval(this.onGameTimer, 10, this);
 
             // Render the hint and choice templates
             var template = this.template();
@@ -80,23 +78,21 @@ define([
             return Math.floor(Math.random() * (max - min + 1)) + min;
         },
 
-        onGameTimer: function(data) {
+        timerTrigger: function(data) {
             var self = this;
-            var hintInterval = self.gameTime;
-            self.timeElapsed = data.time / 10;
-            console.log(self.timeElapsed + " " + self.gameTime);
 
-            if (self.timeElapsed == self.gameTime) {
-                var idx = Math.ceil((self.gameTime - self.timeElapsed) / hintInterval);
-
+            // Animate in the equation
+            if (data.timeElapsed == data.roundDuration) {
+                // Set up the element that will hold the equation
                 var hint = self.winningAnswer.num1 + " + " + self.winningAnswer.num2;
-
                 var item = $("<div class='ingredient-hint'><span>" + hint + "</span></div>");
                 $("#ingredients").append(item);
                 $('.ingredient-hint').textfill({
                     maxFontPixels: 36
                 });
 
+                // Animate the equation text in and make it wiggle
+                // throughout the round
                 var tada = function() {
                     $(item).animo({
                         animation: 'tada'
@@ -105,76 +101,60 @@ define([
                     });
                     self.currentItem = item;
                 }
-
                 $(item).animo({
                     animation: 'bounceInRight'
                 }, tada);
             }
 
-            var te = self.pad(self.timeElapsed.toString(), 4);
+            // Update the timer display
+            var te = self.pad((data.timeElapsed / 10).toString(), 4);
             var time = te.substr(0, 2) + ":" + te.substr(2, 4);
             $("#timer").html(time);
-            if (self.timeElapsed < 500) {
+            if (data.timeElapsed < 5000) {
                 $("#timer").css("color", "red");
             }
-            if (self.timeElapsed == 0) {
-                if (self.currentItem != null) {
-                    self.endTimer();
-                    $(self.currentItem).animo({
-                        animation: 'bounceOutLeft'
-                    }, function(e) {
-                        $(e.element).remove();
-                        self.gameOver(false);
-                    });
-                }
-            }
         },
 
-        endTimer: function() {
+        gameOver: function(data) {
+            // Render the end-of-round results view
             this.undelegateEvents();
-            clearInterval(this.timer);
-        },
-
-        gameOver: function(isCorrect) {
-            this.endTimer();
-            $("#score").html(Backbone.score);
-
-            var view = new RoundResultsView({
-                winner: this.winningAnswer,
-                isCorrect: isCorrect
-            });
+            var view = new RoundResultsView(data);
             view.render();
-
-            $("#recipe-name").append("<b>" + this.winningAnswer.recipeName + "</b>");
-            $("#btn-play").show();
         },
 
-        onGuess: function(e) {
-            console.log(Backbone.score);
-            if ("guess-btn-" + this.winningAnswer.answer_id == e.target.id) {
-                Backbone.score += this.timeElapsed;
-                this.gameOver(true);
-            } else {
-                Backbone.score -= this.timeElapsed;
-                this.gameOver(false);
-            }
+        guess: function(e) {
+            // Tell the server what the user guessed
+            this.selectedAnswer = $(e.target);
+            Backbone.socket.emit("guess", {
+                guessId: $(e.target).attr("rel")
+            });
+        },
+
+        wrongGuess: function() {
+            // Highlight the answer the user clicked
+            // and hide all others.
+            var self = this;
+            _.each($(".btn-choice"), function(btn) {
+                if (self.selectedAnswer.attr("rel") != $(btn).attr("rel")) {
+                    $(btn).fadeTo("slow", 0);
+                } else {
+                    $(btn).css("background-color", "red");
+                }
+            });
         },
 
         enterWaitingRoom: function() {
+            // Render the view that is displayed while
+            // a round is in progress.
             var view = new WaitingRoomView();
             view.render();
         },
 
         pad: function(n, width, z) {
+            // Used to pad the timer display with leading zeroes.
             z = z || '0';
             n = n + '';
             return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
-        },
-
-        toTitleCase: function(str) {
-            return str.replace(/\w\S*/g, function(txt) {
-                return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
-            });
         }
     });
 

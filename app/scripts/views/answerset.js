@@ -11,15 +11,12 @@ define([
     var AnswersetView = Backbone.View.extend({
         template: AnswerSetTemplate,
 
-        initialize: function() {
-
-        },
-
         render: function() {
+            // Creates the four answer choice
+            // buttons.
             var template = this.template({
                 choices: this.options.choices
             });
-
             this.$el.html(template);
         },
     });
