@@ -8,16 +8,17 @@ define([
     'models/answer',
     'views/answerset',
     'views/roundresults',
+    'views/waitingroom',
     'animo',
     'textfill',
-], function($, _, Backbone, GameTemplate, AnswerModel, AnswersetView, RoundResultsView) {
+], function($, _, Backbone, GameTemplate, AnswerModel, AnswersetView, RoundResultsView, WaitingRoomView) {
     'use strict';
 
     var GameView = Backbone.View.extend({
         el: $("#page"),
         timer: null,
         gameTime: 1500,
-        timeElapsed: 1500,
+        timeElapsed: null,
         answers: null,
         winningAnswer: null,
         currentItem: null,
@@ -39,12 +40,19 @@ define([
 
         initializeGame: function() {
             var self = this;
-            Backbone.socket.emit("newgame",
-                function(data) {
-                    console.log(data);
-                    self.answers = data;
-                    self.startRound();
-                });
+            Backbone.socket.emit("newgame");
+            Backbone.socket.on("startgame", function(data) {
+                self.answers = data.possibleAnswers;
+                self.startRound();
+            });
+            Backbone.socket.on("enterwaitingroom", function() {
+                console.log("enterwaitingroom");
+                self.enterWaitingRoom();
+            });
+            Backbone.socket.on("updategametimer", function(data) {
+                console.log("updatinggametimer");
+                self.onGameTimer(data);
+            });
         },
 
         startRound: function() {
@@ -55,9 +63,10 @@ define([
             // Set the winner
             var winnerIdx = this.getRandomInt(0, 3);
             this.winningAnswer = this.answers[0];
-            this.gameTime = this.timeElapsed = 1000;
+            //this.gameTime = this.timeElapsed = 1500;
 
-            this.timer = window.setInterval(this.onGameTimer, 10, this);
+            //this.timer = window.setInterval(this.onGameTimer, 10, this);
+
             // Render the hint and choice templates
             var template = this.template();
             this.$el.html(template);
@@ -71,8 +80,11 @@ define([
             return Math.floor(Math.random() * (max - min + 1)) + min;
         },
 
-        onGameTimer: function(self) {
+        onGameTimer: function(data) {
+            var self = this;
             var hintInterval = self.gameTime;
+            self.timeElapsed = data.time / 10;
+            console.log(self.timeElapsed + " " + self.gameTime);
 
             if (self.timeElapsed == self.gameTime) {
                 var idx = Math.ceil((self.gameTime - self.timeElapsed) / hintInterval);
@@ -84,10 +96,6 @@ define([
                 $('.ingredient-hint').textfill({
                     maxFontPixels: 36
                 });
-                $('.ingredient-hint').textfill({
-                    maxFontPixels: 36
-                });
-
 
                 var tada = function() {
                     $(item).animo({
@@ -102,7 +110,6 @@ define([
                     animation: 'bounceInRight'
                 }, tada);
             }
-            self.timeElapsed--;
 
             var te = self.pad(self.timeElapsed.toString(), 4);
             var time = te.substr(0, 2) + ":" + te.substr(2, 4);
@@ -151,6 +158,11 @@ define([
                 Backbone.score -= this.timeElapsed;
                 this.gameOver(false);
             }
+        },
+
+        enterWaitingRoom: function() {
+            var view = new WaitingRoomView();
+            view.render();
         },
 
         pad: function(n, width, z) {

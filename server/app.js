@@ -8,8 +8,9 @@ var express = require('express'),
     hbs = require('express-hbs'),
     server = http.createServer(app),
     io = require('socket.io').listen(server),
-    /*device = require('express-device'),*/
-    game = require('./models/game.js');
+    engine = require('./models/gameengine.js'),
+    timer = null,
+    gameTime = null;
 
 
 app.configure(function() {
@@ -21,12 +22,11 @@ app.configure(function() {
 
     // set logging
     app.use(function(req, res, next) {
-        console.log('%s %s', req.method, req.url);
+        //console.log('%s %s', req.method, req.url);
         next();
     });
 });
 
-// route index.html
 app.get('/', function(req, res) {
     res.sendfile(path.join(__dirname, '../app/index.html'));
 });
@@ -35,13 +35,11 @@ app.get('/', function(req, res) {
 server.listen(app.get('port'));
 
 io.sockets.on('connection', function(socket) {
-    app.possibleAnswers = game.newGame();
-
-    io.sockets.emit('message', {
-        msg: "<span style=\"color:red !important\">someone connected</span>"
-    });
-    io.sockets.emit('message', {
-        msg: "<span style=\"color:red !important\">" + app.possibleAnswers[0].num1 + " + " + app.possibleAnswers[0].num2 + "</span>"
+    engine.addUser(socket.id, "Andy" + socket.id);
+    socket.on('disconnect', function() {
+        engine.removeUser(socket.id);
+        if (engine.getStatus().activeUsers.length < 0)
+            clearInterval(timer);
     });
 
     socket.on('guess', function(data, fn) {
@@ -64,8 +62,33 @@ io.sockets.on('connection', function(socket) {
     });
 
     socket.on('newgame', function(fn) {
-        app.possibleAnswers = game.newGame();
-        fn(app.possibleAnswers);
-    });
+        if (engine.getStatus().isGameInProgress) {
+            io.sockets.emit('enterwaitingroom');
+            return;
+        }
 
+        app.possibleAnswers = engine.newGame();
+        io.sockets.emit('startgame', {
+            possibleAnswers: app.possibleAnswers
+        });
+
+        gameTime = 15000;
+
+        // Send time every second
+        timer = setInterval(function() {
+            io.sockets.emit('updategametimer', {
+                time: gameTime
+            });
+            if (gameTime == 0) {
+                clearInterval(timer);
+                io.sockets.emit('gameover', {
+                    correctAnswer: app.possibleAnswers[0],
+                    //winner: engine.getWinnerName(),
+                    //standings: engine.getStandings()
+                });
+            }
+            gameTime = gameTime - 1000;
+
+        }, 1000);
+    });
 });
