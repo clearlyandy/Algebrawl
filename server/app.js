@@ -35,9 +35,9 @@ app.get('/', function(req, res) {
 server.listen(app.get('port'));
 
 io.sockets.on('connection', function(socket) {
-    engine.addUser(socket.id, "Andy" + socket.id);
+    engine.getUserManager().addUser(socket.id, "Andy" + socket.id);
     socket.on('disconnect', function() {
-        engine.removeUser(socket.id);
+        engine.getUserManager().removeUser(socket.id);
         if (engine.getStatus().activeUsers.length < 0)
             clearInterval(timer);
     });
