@@ -1,0 +1,249 @@
+@import 'sass-bootstrap/lib/bootstrap';
+
+.hero-unit {
+    margin: 50px auto 0 auto;
+    width: 300px;
+}
+
+.browsehappy {
+    margin: 0.2em 0;
+    background: #ccc;
+    color: #000;
+    padding: 0.2em 0;
+}
+
+/* Space out content a bit */
+body {
+    padding-top: 20px;
+    padding-bottom: 20px;
+}
+
+.col-condensed {
+  margin-left: 0px;
+  margin-right: 0px;
+  div[class^="col-"]{
+    padding-left: 0px;
+    padding-right: 0px;
+  }
+}
+
+/* Everything but the jumbotron gets side spacing for mobile first views */
+.header,
+.marketing,
+.footer {
+    padding-left: 0px;
+    padding-right: 0px;
+}
+
+/* Custom page header */
+.header {
+    border-bottom: 1px solid #e5e5e5;
+}
+
+/* Make the masthead heading the same height as the navigation */
+.header h3 {
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-bottom: 10px;
+    color: #333;
+    font-family: 'Anton', sans-serif;
+    font-size: 3em;
+}
+
+.header h3 a {
+    text-decoration: none;
+    color: #333;
+}
+
+/* Custom page footer */
+.footer {
+    padding-top: 10px;
+    color: #777;
+    border-top: 1px solid #e5e5e5;
+}
+
+.container-narrow > hr {
+    margin: 30px 0;
+}
+
+/* Main marketing message and sign up button */
+.jumbotron {
+    text-align: center;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.home {
+    text-align: center;
+    padding: 0px;
+    position: absolute;
+    width: 100%;
+    top: 50%;
+    left: 50%;
+    height: 30%;
+    width: 50%;
+    margin: -2% 0 0 -25%;
+}
+
+.home-inner {
+
+}
+
+.home-loader {
+    text-align: center;
+    background-color: transparent;
+}
+
+.btn-play-lg {
+    border: 3px solid #fff;
+    background-color: #84B32B;
+    color: #fff;
+    margin: 20px;
+    padding: 10px 40px 10px 40px;
+}
+
+.btn-play-lg:hover {
+    background-color: #739B25;
+    color: #fff;
+}
+
+.btn-play-sm {
+    display: none;
+    margin-top: -3px;
+}
+
+#btn-play-sm {
+    padding: 5px 10px 5px 10px
+}
+
+.jumbotron .btn {
+    font-size: 21px;
+    padding: 14px 24px;
+}
+
+#ingredients {
+    position: relative;
+    height: 65px !important;
+    overflow: hidden;
+    padding-bottom: 20px
+}
+
+.ingredient-hint {
+    font-size: 2em;
+    color: #000;
+    position: absolute;
+    font-weight: bold;
+    width: 100%;
+    padding: 0px 20px 0px 20px;
+    height: 40px;
+    text-align: center;
+    display:inline;
+}
+
+#page {
+    min-height: 100px;
+}
+
+#stats-holder {
+    margin-top: -8px;
+}
+
+.stats {
+    display: none;
+    font-weight: bold;
+}
+
+#timer {
+    /*display:none;*/
+}
+
+.btn-warning {
+    background-color: #84B32B;
+    border: 3px solid #FFF;
+}
+
+.btn-warning:hover, .btn-warning:active, .btn-warning:visited, .btn-warning:focus {
+    background-color: #739B25;
+    border-color: #FFFFFF;
+}
+
+/* Supporting marketing content */
+.marketing {
+    margin: 40px 0;
+}
+
+.marketing p + h4 {
+    margin-top: 28px;
+}
+
+h4 {
+    margin-top: 3px;
+}
+
+@media screen and (max-width: 480px) {
+    body {
+        padding-top: 10px;
+    }
+}
+
+@media screen and (max-width: 768px) {
+    .header h3 {
+        font-family: 'Anton', sans-serif;
+        font-size: 1.5em;
+    }
+
+    #home-img-1, #home-img-2, #home-img-3 {
+        display: none;
+    }
+
+    .small-screen {
+        visibility: visible;
+    }
+
+    .large-screen {
+        visibility: hidden;
+    }
+
+    .header {
+        margin-bottom: 10px;
+    }
+}
+
+
+/* Responsive: Portrait tablets and up */
+@media screen and (min-width: 768px) {
+    .container {
+        max-width: 730px;
+    }
+
+    #stats-holder {
+        margin-top: 3px
+    }
+
+    #ingredients {
+        height: 65px !important;
+    }
+
+    /* Remove the padding we set earlier */
+    .header,
+    .marketing,
+    .footer {
+        padding-left: 0;
+        padding-right: 0;
+    }
+    /* Space out the masthead */
+    .header {
+        margin-bottom: 10px;
+    }
+    /* Remove the bottom border on the jumbotron for visual effect */
+    .jumbotron {
+        border-bottom: 0;
+    }
+
+    .small-screen {
+        visibility: hidden;
+    }
+
+    .large-screen {
+        visibility: visible;
+    }
+}
